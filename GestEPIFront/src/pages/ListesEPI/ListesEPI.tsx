@@ -72,19 +72,25 @@ export default function ListesEPI() {
 
       const response = await fetch("http://localhost:5500/epis", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(formattedEpi),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`Erreur HTTP : ${response.status}`);
+        throw new Error(data.message || `HTTP error: ${response.status}`);
       }
 
-      const addedEpi = await response.json();
-      setEpis((prev) => [...prev, addedEpi]);
+      const updatedResponse = await fetch("http://localhost:5500/epis");
+      const updatedData = await updatedResponse.json();
+      setEpis(updatedData);
       setIsModalOpen(false);
     } catch (error) {
       console.error("Erreur lors de l'ajout :", error);
+      alert(`Erreur lors de l'ajout : ${error}`);
     }
   };
 

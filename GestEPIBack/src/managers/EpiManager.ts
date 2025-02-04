@@ -33,6 +33,14 @@ export const addNewEpi = async (request: Request, next: NextFunction) => {
     if (!request.body.type_id) {
       throw new Error("Le type d'EPI est requis.");
     }
+
+    const dateFields = ["date_achat", "date_fabrication", "date_mise_service"];
+    dateFields.forEach((field) => {
+      if (!request.body[field] || isNaN(Date.parse(request.body[field]))) {
+        throw new Error(`La date ${field} est invalide ou manquante.`);
+      }
+    });
+
     const {
       id,
       type_id,
@@ -47,6 +55,7 @@ export const addNewEpi = async (request: Request, next: NextFunction) => {
       date_mise_service,
       périodicité_contrôle,
     } = request.body;
+
     const newEpi: Epi = {
       id,
       type_id,
@@ -56,21 +65,26 @@ export const addNewEpi = async (request: Request, next: NextFunction) => {
       numéro_série,
       taille,
       couleur,
-      date_achat,
-      date_fabrication,
-      date_mise_service,
+      date_achat: new Date(date_achat),
+      date_fabrication: new Date(date_fabrication),
+      date_mise_service: new Date(date_mise_service),
       périodicité_contrôle,
     };
+
     const result = await epiModel.addOne(newEpi);
-    if (result.affectedRows === 0) {
-      throw new Error("");
-    } else {
-      const newEPI = await epiModel.getById(Number(result.insertId));
-      return newEPI;
+    if (!result.insertId) {
+      throw new Error("Erreur lors de l'ajout de l'EPI");
     }
+
+    const addedEpi = await epiModel.getById(result.insertId);
+    if (!addedEpi) {
+      throw new Error("Erreur lors de la récupération de l'EPI ajouté.");
+    }
+
+    return { message: "EPI ajouté avec succès", id: addedEpi.id };
   } catch (error) {
     console.error("Erreur lors de l'ajout de l'EPI:", error);
-    throw new Error(`Erreur lors de l'ajout de l'EPI: ${error}`);
+    throw error;
   }
 };
 
