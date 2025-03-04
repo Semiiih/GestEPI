@@ -24,9 +24,9 @@ app.use(cors(options));
 // Middleware to parse json throught requests.
 app.use(express.json());
 
-app.use("/epis", epiController);
 app.use("/episChecks", EpiCheckController);
 app.use("/epiTypes", epiTypesController);
+app.use("/epis", epiController);
 app.use("/users", usersController);
 app.use("/usersTypes", usersTypesController);
 app.use("/checkStatus", checkStatusController);

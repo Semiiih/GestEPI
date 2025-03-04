@@ -7,6 +7,7 @@ export default function ListesEPI() {
   const [epis, setEpis] = useState<Epi[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [editingEpi, setEditingEpi] = useState<Epi | null>(null);
 
   const [newEpi, setNewEpi] = useState<Omit<Epi, "id">>({
     identifiant_personnalise: "",
@@ -42,16 +43,24 @@ export default function ListesEPI() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
+    const updatedValue =
+      type === "date"
+        ? new Date(value)
+        : name === "type_id" || name === "périodicité_contrôle"
+        ? Number(value)
+        : value;
 
-    setNewEpi((prev) => ({
-      ...prev,
-      [name]:
-        type === "date"
-          ? new Date(value)
-          : name === "type_id"
-          ? Number(value)
-          : value,
-    }));
+    if (editingEpi) {
+      setEditingEpi((prev) => ({
+        ...prev!,
+        [name]: updatedValue,
+      }));
+    } else {
+      setNewEpi((prev) => ({
+        ...prev,
+        [name]: updatedValue,
+      }));
+    }
   };
 
   const formatDateToMySQL = (date: Date): string => {
@@ -94,6 +103,59 @@ export default function ListesEPI() {
     }
   };
 
+  const handleEditEpi = async () => {
+    if (!editingEpi) return;
+
+    try {
+      const formattedEpi = {
+        ...editingEpi,
+        date_achat: formatDateToMySQL(new Date(editingEpi.date_achat)),
+        date_fabrication: formatDateToMySQL(
+          new Date(editingEpi.date_fabrication)
+        ),
+        date_mise_service: formatDateToMySQL(
+          new Date(editingEpi.date_mise_service)
+        ),
+      };
+
+      const response = await fetch(
+        `http://localhost:5500/epis/${editingEpi.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formattedEpi),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error: ${response.status}`);
+      }
+
+      const updatedResponse = await fetch("http://localhost:5500/epis");
+      const updatedData = await updatedResponse.json();
+      setEpis(updatedData);
+      setIsModalOpen(false);
+      setEditingEpi(null);
+    } catch (error) {
+      console.error("Erreur lors de la modification :", error);
+      alert(`Erreur lors de la modification : ${error}`);
+    }
+  };
+
+  const handleStartEdit = (epi: Epi) => {
+    setEditingEpi(epi);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingEpi(null);
+  };
+
   const handleDeleteEpi = async (id: number) => {
     try {
       const response = await fetch(`http://localhost:5500/epis/${id}`, {
@@ -123,48 +185,51 @@ export default function ListesEPI() {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded shadow-lg w-1/2">
             <h2 className="text-xl font-semibold mb-4">
-              Ajouter une nouvelle EPI
+              {editingEpi ? "Modifier l'EPI" : "Ajouter une nouvelle EPI"}
             </h2>
             <div className="grid grid-cols-2 gap-4">
               <input
                 name="identifiant_personnalise"
                 placeholder="Identifiant personnalisé"
-                value={newEpi.identifiant_personnalise}
+                value={
+                  editingEpi?.identifiant_personnalise ||
+                  newEpi.identifiant_personnalise
+                }
                 onChange={handleInputChange}
                 className="border p-2 rounded"
               />
               <input
                 name="marque"
                 placeholder="Marque"
-                value={newEpi.marque}
+                value={editingEpi?.marque || newEpi.marque}
                 onChange={handleInputChange}
                 className="border p-2 rounded"
               />
               <input
                 name="modèle"
                 placeholder="Modèle"
-                value={newEpi.modèle}
+                value={editingEpi?.modèle || newEpi.modèle}
                 onChange={handleInputChange}
                 className="border p-2 rounded"
               />
               <input
                 name="numéro_série"
                 placeholder="Numéro de Série"
-                value={newEpi.numéro_série}
+                value={editingEpi?.numéro_série || newEpi.numéro_série}
                 onChange={handleInputChange}
                 className="border p-2 rounded"
               />
               <input
                 name="taille"
                 placeholder="Taille"
-                value={newEpi.taille || ""}
+                value={editingEpi?.taille || newEpi.taille || ""}
                 onChange={handleInputChange}
                 className="border p-2 rounded"
               />
               <input
                 name="couleur"
                 placeholder="Couleur"
-                value={newEpi.couleur || ""}
+                value={editingEpi?.couleur || newEpi.couleur || ""}
                 onChange={handleInputChange}
                 className="border p-2 rounded"
               />
@@ -174,7 +239,7 @@ export default function ListesEPI() {
                   name="type_id"
                   type="number"
                   placeholder="Type ID"
-                  value={newEpi.type_id || ""}
+                  value={editingEpi?.type_id || newEpi.type_id || ""}
                   onChange={handleInputChange}
                   className="border p-2 rounded"
                 />
@@ -185,7 +250,10 @@ export default function ListesEPI() {
                   name="périodicité_contrôle"
                   type="number"
                   placeholder="Périodicité (jours)"
-                  value={newEpi.périodicité_contrôle}
+                  value={
+                    editingEpi?.périodicité_contrôle ||
+                    newEpi.périodicité_contrôle
+                  }
                   onChange={handleInputChange}
                   className="border p-2 rounded"
                 />
@@ -195,7 +263,11 @@ export default function ListesEPI() {
                 <input
                   name="date_fabrication"
                   type="date"
-                  value={newEpi.date_fabrication.toISOString().split("T")[0]}
+                  value={formatDateToMySQL(
+                    editingEpi?.date_fabrication
+                      ? new Date(editingEpi.date_fabrication)
+                      : newEpi.date_fabrication
+                  )}
                   onChange={handleInputChange}
                   className="border p-2 rounded"
                 />
@@ -205,7 +277,11 @@ export default function ListesEPI() {
                 <input
                   name="date_mise_service"
                   type="date"
-                  value={newEpi.date_mise_service.toISOString().split("T")[0]}
+                  value={formatDateToMySQL(
+                    editingEpi?.date_mise_service
+                      ? new Date(editingEpi.date_mise_service)
+                      : newEpi.date_mise_service
+                  )}
                   onChange={handleInputChange}
                   className="border p-2 rounded"
                 />
@@ -215,7 +291,11 @@ export default function ListesEPI() {
                 <input
                   name="date_achat"
                   type="date"
-                  value={newEpi.date_achat.toISOString().split("T")[0]}
+                  value={formatDateToMySQL(
+                    editingEpi?.date_achat
+                      ? new Date(editingEpi.date_achat)
+                      : newEpi.date_achat
+                  )}
                   onChange={handleInputChange}
                   className="border p-2 rounded"
                 />
@@ -223,16 +303,16 @@ export default function ListesEPI() {
             </div>
             <div className="flex justify-end mt-4">
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={handleCloseModal}
                 className="bg-gray-500 text-white px-4 py-2 rounded mr-2 hover:bg-gray-600"
               >
                 Annuler
               </button>
               <button
-                onClick={handleAddEpi}
+                onClick={editingEpi ? handleEditEpi : handleAddEpi}
                 className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
               >
-                Ajouter
+                {editingEpi ? "Modifier" : "Ajouter"}
               </button>
             </div>
           </div>
@@ -245,7 +325,7 @@ export default function ListesEPI() {
         <table className="table-auto w-full border-collapse border border-gray-200">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border p-2 bg-white">supprimer</th>
+              <th className="border p-2 bg-white">Edit</th>
               <th className="border p-2">ID</th>
               <th className="border p-2">Identifiant</th>
               <th className="border p-2">Marque</th>
@@ -257,19 +337,22 @@ export default function ListesEPI() {
               <th className="border p-2">Date de fabrication</th>
               <th className="border p-2">Date de service</th>
               <th className="border p-2">Périodicité</th>
+              <th className="border p-1 bg-white">Supprimer</th>
             </tr>
           </thead>
           <tbody>
             {epis.map((epi) => (
               <tr key={epi.id} className="hover:bg-gray-50">
                 <td className="border p-2 text-center">
-                  <button
-                    onClick={() => handleDeleteEpi(epi.id)}
-                    className="text-red-600 hover:text-red-800"
-                    title="Supprimer"
-                  >
-                    🗑️
-                  </button>
+                  <div className="flex justify-center space-x-2">
+                    <button
+                      onClick={() => handleStartEdit(epi)}
+                      className="text-blue-600 hover:text-blue-800"
+                      title="Modifier"
+                    >
+                      ✏️
+                    </button>
+                  </div>
                 </td>
                 <td className="border p-2.5 text-center">{epi.id}</td>
                 <td className="border p-2.5">{epi.identifiant_personnalise}</td>
@@ -279,16 +362,27 @@ export default function ListesEPI() {
                 <td className="border p-2.5">{epi.taille || "N/A"}</td>
                 <td className="border p-2.5">{epi.couleur || "N/A"}</td>
                 <td className="border p-2.5">
-                  {epi.date_achat.toString().split("T")[0]}
+                  {new Date(epi.date_achat).toISOString().split("T")[0]}
                 </td>
                 <td className="border p-2.5">
-                  {epi.date_fabrication.toString().split("T")[0]}
+                  {new Date(epi.date_fabrication).toISOString().split("T")[0]}
                 </td>
                 <td className="border p-2.5">
-                  {epi.date_mise_service.toString().split("T")[0]}
+                  {new Date(epi.date_mise_service).toISOString().split("T")[0]}
                 </td>
                 <td className="border p-2.5">
                   {epi.périodicité_contrôle} jours
+                </td>
+                <td className="border p-2 text-center">
+                  <div className="flex justify-center space-x-2">
+                    <button
+                      onClick={() => handleDeleteEpi(epi.id)}
+                      className="text-red-600 hover:text-red-800 flex justify-center"
+                      title="Supprimer"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
