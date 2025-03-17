@@ -73,7 +73,6 @@ export default function Layout({ children }: LayoutProps) {
           ></div>
         </div>
       )}
-
       {/* partie pc */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col bg-indigo-600 text-white p-4">
         <h2 className="text-lg font-semibold mb-4">GESTEPI</h2>
@@ -98,7 +97,6 @@ export default function Layout({ children }: LayoutProps) {
           </ul>
         </nav>
       </div>
-
       <div className="lg:pl-64 bg-indigo-600 text-white p-4 flex items-center justify-between shadow">
         <button
           className="lg:hidden p-2 rounded bg-indigo-500"
@@ -109,7 +107,6 @@ export default function Layout({ children }: LayoutProps) {
         <div className="text-lg font-semibold">Tableau de bord</div>
         <div className="text-sm">Semeehh</div>
       </div>
-
       <main className="lg:pl-64 p-6">
         <div className="bg-white p-4 shadow rounded">{renderPage()}</div>
       </main>

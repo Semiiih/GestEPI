@@ -322,72 +322,104 @@ export default function ListesEPI() {
       {loading ? (
         <p>Chargement...</p>
       ) : (
-        <table className="table-auto w-full border-collapse border border-gray-200">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2 bg-white">Edit</th>
-              <th className="border p-2">ID</th>
-              <th className="border p-2">Identifiant</th>
-              <th className="border p-2">Marque</th>
-              <th className="border p-2">Modèle</th>
-              <th className="border p-2">Numéro de Série</th>
-              <th className="border p-2">Taille</th>
-              <th className="border p-2">Couleur</th>
-              <th className="border p-2">Date d'Achat</th>
-              <th className="border p-2">Date de fabrication</th>
-              <th className="border p-2">Date de service</th>
-              <th className="border p-2">Périodicité</th>
-              <th className="border p-1 bg-white">Supprimer</th>
-            </tr>
-          </thead>
-          <tbody>
-            {epis.map((epi) => (
-              <tr key={epi.id} className="hover:bg-gray-50">
-                <td className="border p-2 text-center">
-                  <div className="flex justify-center space-x-2">
-                    <button
-                      onClick={() => handleStartEdit(epi)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Modifier"
-                    >
-                      ✏️
-                    </button>
-                  </div>
-                </td>
-                <td className="border p-2.5 text-center">{epi.id}</td>
-                <td className="border p-2.5">{epi.identifiant_personnalise}</td>
-                <td className="border p-2.5">{epi.marque}</td>
-                <td className="border p-2.5">{epi.modèle}</td>
-                <td className="border p-2.5">{epi.numéro_série}</td>
-                <td className="border p-2.5">{epi.taille || "N/A"}</td>
-                <td className="border p-2.5">{epi.couleur || "N/A"}</td>
-                <td className="border p-2.5">
-                  {new Date(epi.date_achat).toISOString().split("T")[0]}
-                </td>
-                <td className="border p-2.5">
-                  {new Date(epi.date_fabrication).toISOString().split("T")[0]}
-                </td>
-                <td className="border p-2.5">
-                  {new Date(epi.date_mise_service).toISOString().split("T")[0]}
-                </td>
-                <td className="border p-2.5">
-                  {epi.périodicité_contrôle} jours
-                </td>
-                <td className="border p-2 text-center">
-                  <div className="flex justify-center space-x-2">
-                    <button
-                      onClick={() => handleDeleteEpi(epi.id)}
-                      className="text-red-600 hover:text-red-800 flex justify-center"
-                      title="Supprimer"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto shadow-md rounded-lg">
+          <table className="w-full text-sm text-left text-gray-900">
+            <thead className="text-xs text-blue-600 uppercase bg-blue-50">
+              <tr>
+                <th scope="col" className="px-4 py-6 text-center">
+                  Actions
+                </th>
+                <th scope="col" className="px-4 py-6">
+                  ID
+                </th>
+                <th scope="col" className="px-4 py-6">
+                  Identifiant
+                </th>
+                <th scope="col" className="px-4 py-6">
+                  Marque
+                </th>
+                <th scope="col" className="px-4 py-6">
+                  Modèle
+                </th>
+                <th scope="col" className="px-4 py-6">
+                  Numéro de Série
+                </th>
+                <th scope="col" className="px-4 py-6">
+                  Taille
+                </th>
+                <th scope="col" className="px-4 py-6">
+                  Couleur
+                </th>
+                <th scope="col" className="px-4 py-6">
+                  Date d'Achat
+                </th>
+                <th scope="col" className="px-4 py-6">
+                  Date de Fabrication
+                </th>
+                <th scope="col" className="px-4 py-6">
+                  Date de Service
+                </th>
+                <th scope="col" className="px-4 py-6">
+                  Périodicité
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {epis.map((epi) => (
+                <tr
+                  key={epi.id}
+                  className="bg-white border-b hover:bg-gray-50 transition duration-200 ease-in-out"
+                  onClick={() => handleStartEdit(epi)}
+                >
+                  <td className="px-4 py-6 text-center">
+                    <div className="flex justify-center space-x-2">
+                      <button
+                        onClick={() => handleStartEdit(epi)}
+                        className="text-blue-600 hover:text-blue-800 transition transform hover:scale-110 pr-2"
+                        title="Modifier"
+                      >
+                        ✏️
+                      </button>
+                      <div className="border-r-2 " />
+                      <button
+                        onClick={() => handleDeleteEpi(epi.id)}
+                        className="text-red-600 hover:text-red-800 transition transform hover:scale-110 pl-2"
+                        title="Supprimer"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-4 py-6 font-medium text-gray-900">
+                    {epi.id}
+                  </td>
+                  <td className="px-4 py-6">{epi.identifiant_personnalise}</td>
+                  <td className="px-4 py-6">{epi.marque}</td>
+                  <td className="px-4 py-6">{epi.modèle}</td>
+                  <td className="px-4 py-6">{epi.numéro_série}</td>
+                  <td className="px-4 py-6">{epi.taille || "N/A"}</td>
+                  <td className="px-4 py-6">{epi.couleur || "N/A"}</td>
+                  <td className="px-4 py-6">
+                    {new Date(epi.date_achat).toISOString().split("T")[0]}
+                  </td>
+                  <td className="px-4 py-6">
+                    {new Date(epi.date_fabrication).toISOString().split("T")[0]}
+                  </td>
+                  <td className="px-4 py-6">
+                    {
+                      new Date(epi.date_mise_service)
+                        .toISOString()
+                        .split("T")[0]
+                    }
+                  </td>
+                  <td className="px-4 py-6">
+                    {epi.périodicité_contrôle} jours
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

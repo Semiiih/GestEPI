@@ -46,14 +46,10 @@ export const addNewEpiCheck = async (epiCheck: EpiCheck) => {
 
     const result = await epiCheckModel.addOne(epiCheck);
 
-    const { id, ...rest } = epiCheck;
-
-    const newEpiCheck = {
+    return {
+      message: "Contrôle d'EPI ajouté avec succès.",
       id: result.insertId,
-      ...rest,
     };
-
-    return newEpiCheck;
   } catch (error) {
     console.error("Erreur dans addNewEpiCheck :", error);
     throw new Error(
@@ -69,18 +65,27 @@ export const updateEpiCheck = async (epiCheck: EpiCheck) => {
     if (!epiCheck.id) {
       throw new Error("L'ID est obligatoire pour la mise à jour.");
     }
+
+    console.log("Données reçues pour mise à jour :", epiCheck);
+
     const result = await epiCheckModel.update(epiCheck);
+
     if (result.affectedRows === 0) {
-      throw new Error("Aucun contrôle d'EPI mis à jour. ID non trouvé.");
+      throw new Error(
+        `Aucun contrôle d'EPI mis à jour. ID ${epiCheck.id} non trouvé.`
+      );
     }
+
     return {
       message: `Contrôle d'EPI avec ID ${epiCheck.id} mis à jour.`,
+      data: epiCheck,
     };
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Erreur inconnue";
+    console.error("Erreur détaillée dans updateEpiCheck :", error);
     throw new Error(
-      `Erreur lors de la mise à jour du contrôle d'EPI: ${errorMessage}`
+      `Erreur lors de la mise à jour du contrôle d'EPI: ${
+        error instanceof Error ? error.message : "Erreur inconnue"
+      }`
     );
   }
 };

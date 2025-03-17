@@ -76,13 +76,45 @@ export const epiCheckModel = {
     let connection;
     try {
       connection = await pool.getConnection();
-      const rows = await connection.query(
-        `UPDATE EpiCheck SET epiId = ?, date = ? WHERE id = ?`,
-        [epiCheck.epi_id, epiCheck.date_contrôle, epiCheck.id]
-      );
-      return rows;
+
+      // Convertir la date en format MySQL (YYYY-MM-DD)
+      const formattedDate = epiCheck.date_contrôle
+        ? new Date(epiCheck.date_contrôle).toISOString().split("T")[0]
+        : null;
+
+      const query = `
+        UPDATE epiCheck 
+        SET 
+          date_contrôle = ?, 
+          gestionnaire_id = ?, 
+          epi_id = ?, 
+          status_id = ?, 
+          remarques = ? 
+        WHERE id = ?
+      `;
+      const values = [
+        formattedDate,
+        epiCheck.gestionnaire_id,
+        epiCheck.epi_id,
+        epiCheck.status_id,
+        epiCheck.remarques,
+        epiCheck.id,
+      ];
+
+      console.log("Requête SQL :", query);
+      console.log("Valeurs :", values);
+
+      const result = await connection.query(query, values);
+
+      console.log("Résultat de la mise à jour :", result);
+
+      return { affectedRows: result.affectedRows || 0 };
     } catch (error) {
-      throw new Error("Erreur lors de la mise à jour du contrôle d'EPI.");
+      console.error(
+        "Erreur détaillée lors de la mise à jour du contrôle d'EPI :",
+        error
+      );
+      throw error;
     } finally {
       if (connection) connection.release();
     }
