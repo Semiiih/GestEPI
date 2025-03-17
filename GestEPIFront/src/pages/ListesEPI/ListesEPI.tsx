@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Epi } from "../../../../Types";
+import { Epi, EpiType } from "../../../../Types";
 
 export default function ListesEPI() {
   const [epis, setEpis] = useState<Epi[]>([]);
+  const [epiTypes, setEpiTypes] = useState<EpiType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingEpi, setEditingEpi] = useState<Epi | null>(null);
@@ -24,13 +25,16 @@ export default function ListesEPI() {
   });
 
   useEffect(() => {
-    const fetchEpis = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:5500/epis");
-        if (!response.ok)
-          throw new Error("Erreur lors de la récupération des données.");
-        const data: Epi[] = await response.json();
-        setEpis(data);
+        // Charger les EPI
+        const episResponse = await fetch("http://localhost:5500/epis");
+        setEpis(await episResponse.json());
+
+        // Charger les types d'EPI
+        const typesResponse = await fetch("http://localhost:5500/epiTypes");
+        const typesData: EpiType[] = await typesResponse.json();
+        setEpiTypes(typesData);
       } catch (error) {
         console.error(error);
       } finally {
@@ -38,10 +42,13 @@ export default function ListesEPI() {
       }
     };
 
-    fetchEpis();
+    fetchData();
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Gestion des changements d'input
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target;
     const updatedValue =
       type === "date"
@@ -51,15 +58,9 @@ export default function ListesEPI() {
         : value;
 
     if (editingEpi) {
-      setEditingEpi((prev) => ({
-        ...prev!,
-        [name]: updatedValue,
-      }));
+      setEditingEpi((prev) => ({ ...prev!, [name]: updatedValue }));
     } else {
-      setNewEpi((prev) => ({
-        ...prev,
-        [name]: updatedValue,
-      }));
+      setNewEpi((prev) => ({ ...prev, [name]: updatedValue }));
     }
   };
 
@@ -157,6 +158,8 @@ export default function ListesEPI() {
   };
 
   const handleDeleteEpi = async (id: number) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce contrôle ?"))
+      return;
     try {
       const response = await fetch(`http://localhost:5500/epis/${id}`, {
         method: "DELETE",
@@ -235,14 +238,20 @@ export default function ListesEPI() {
               />
               <div className="flex flex-col">
                 <p>Type d'EPI</p>
-                <input
+
+                <select
                   name="type_id"
-                  type="number"
-                  placeholder="Type ID"
                   value={editingEpi?.type_id || newEpi.type_id || ""}
                   onChange={handleInputChange}
                   className="border p-2 rounded"
-                />
+                >
+                  <option value="">Sélectionner un type d'EPI</option>
+                  {epiTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.type}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex flex-col">
                 <p>périodicité_contrôle</p>
@@ -326,9 +335,6 @@ export default function ListesEPI() {
           <table className="w-full text-sm text-left text-gray-900">
             <thead className="text-xs text-blue-600 uppercase bg-blue-50">
               <tr>
-                <th scope="col" className="px-4 py-6 text-center">
-                  Actions
-                </th>
                 <th scope="col" className="px-4 py-6">
                   ID
                 </th>
@@ -351,6 +357,9 @@ export default function ListesEPI() {
                   Couleur
                 </th>
                 <th scope="col" className="px-4 py-6">
+                  Types
+                </th>
+                <th scope="col" className="px-4 py-6">
                   Date d'Achat
                 </th>
                 <th scope="col" className="px-4 py-6">
@@ -362,6 +371,9 @@ export default function ListesEPI() {
                 <th scope="col" className="px-4 py-6">
                   Périodicité
                 </th>
+                <th scope="col" className="px-4 py-6 text-center">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -369,52 +381,113 @@ export default function ListesEPI() {
                 <tr
                   key={epi.id}
                   className="bg-white border-b hover:bg-gray-50 transition duration-200 ease-in-out"
-                  onClick={() => handleStartEdit(epi)}
                 >
-                  <td className="px-4 py-6 text-center">
-                    <div className="flex justify-center space-x-2">
-                      <button
-                        onClick={() => handleStartEdit(epi)}
-                        className="text-blue-600 hover:text-blue-800 transition transform hover:scale-110 pr-2"
-                        title="Modifier"
-                      >
-                        ✏️
-                      </button>
-                      <div className="border-r-2 " />
-                      <button
-                        onClick={() => handleDeleteEpi(epi.id)}
-                        className="text-red-600 hover:text-red-800 transition transform hover:scale-110 pl-2"
-                        title="Supprimer"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-4 py-6 font-medium text-gray-900">
+                  <td
+                    className="px-4 py-6 font-medium text-gray-900"
+                    onClick={() => handleStartEdit(epi)}
+                  >
                     {epi.id}
                   </td>
-                  <td className="px-4 py-6">{epi.identifiant_personnalise}</td>
-                  <td className="px-4 py-6">{epi.marque}</td>
-                  <td className="px-4 py-6">{epi.modèle}</td>
-                  <td className="px-4 py-6">{epi.numéro_série}</td>
-                  <td className="px-4 py-6">{epi.taille || "N/A"}</td>
-                  <td className="px-4 py-6">{epi.couleur || "N/A"}</td>
-                  <td className="px-4 py-6">
+                  <td
+                    className="px-4 py-6"
+                    onClick={() => handleStartEdit(epi)}
+                  >
+                    {epi.identifiant_personnalise}
+                  </td>
+                  <td
+                    className="px-4 py-6"
+                    onClick={() => handleStartEdit(epi)}
+                  >
+                    {epi.marque}
+                  </td>
+                  <td
+                    className="px-4 py-6"
+                    onClick={() => handleStartEdit(epi)}
+                  >
+                    {epi.modèle}
+                  </td>
+                  <td
+                    className="px-4 py-6"
+                    onClick={() => handleStartEdit(epi)}
+                  >
+                    {epi.numéro_série}
+                  </td>
+                  <td
+                    className="px-4 py-6"
+                    onClick={() => handleStartEdit(epi)}
+                  >
+                    {epi.taille || "N/A"}
+                  </td>
+                  <td
+                    className="px-4 py-6"
+                    onClick={() => handleStartEdit(epi)}
+                  >
+                    {epi.couleur || "N/A"}
+                  </td>
+                  <td
+                    className="px-4 py-6"
+                    onClick={() => handleStartEdit(epi)}
+                  >
+                    {epiTypes.find((type) => type.id === epi.type_id)?.type}
+                  </td>
+                  <td
+                    className="px-4 py-6"
+                    onClick={() => handleStartEdit(epi)}
+                  >
                     {new Date(epi.date_achat).toISOString().split("T")[0]}
                   </td>
-                  <td className="px-4 py-6">
+                  <td
+                    className="px-4 py-6"
+                    onClick={() => handleStartEdit(epi)}
+                  >
                     {new Date(epi.date_fabrication).toISOString().split("T")[0]}
                   </td>
-                  <td className="px-4 py-6">
+                  <td className="px-4 py-6 onClick={() => handleStartEdit(epi)}">
                     {
                       new Date(epi.date_mise_service)
                         .toISOString()
                         .split("T")[0]
                     }
                   </td>
-                  <td className="px-4 py-6">
+                  <td
+                    className="px-4 py-6"
+                    onClick={() => handleStartEdit(epi)}
+                  >
                     {epi.périodicité_contrôle} jours
                   </td>
+
+                  <td className="flex px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                    <button
+                      onClick={() => handleStartEdit(epi)}
+                      className="text-blue-600 hover:bg-blue-100 p-2 rounded transition transform hover:scale-125"
+                      title="Modifier"
+                    >
+                      ✏️
+                    </button>
+                    <div className="border-r-2 " />
+                    <button
+                      onClick={() => handleDeleteEpi(epi.id)}
+                      className="text-red-600 hover:bg-red-100 p-2 rounded transition transform hover:scale-125"
+                      title="Supprimer"
+                    >
+                      🗑️
+                    </button>
+                  </td>
+                  {/* <td className="flex px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                    <button
+                      onClick={() => handleModifier(controle)}
+                      className="text-blue-600 hover:bg-blue-100 p-2 rounded transition-colors"
+                    >
+                      ✏️
+                    </button>
+                    <div className="border-r-2 " />
+                    <button
+                      onClick={() => handleSupprimer(controle.id)}
+                      className="text-red-600 hover:bg-red-100 p-2 rounded transition-colors"
+                    >
+                      🗑️
+                    </button>
+                  </td> */}
                 </tr>
               ))}
             </tbody>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ReactNode } from "react";
+import { useState, ReactNode, useEffect } from "react";
 import ListesEPI from "../../../pages/ListesEPI/ListesEPI";
 import ListesControle from "../../../pages/ListesControle/ListesControle";
 
@@ -19,7 +19,15 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("epi");
+
+  // Récupérer la page depuis localStorage ou utiliser "epi" par défaut
+  const [currentPage, setCurrentPage] = useState(() => {
+    return localStorage.getItem("currentPage") || "epi";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("currentPage", currentPage);
+  }, [currentPage]);
 
   const renderPage = () => {
     switch (currentPage) {

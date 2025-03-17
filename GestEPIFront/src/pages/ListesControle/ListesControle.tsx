@@ -17,6 +17,21 @@ const ListesControle = () => {
     remarques: null,
   });
 
+  const [gestionnaires, setGestionnaires] = useState<
+    { id: number; nom: string }[]
+  >([]);
+  const [epis, setEpis] = useState<
+    { id: number; identifiant_personnalise: string }[]
+  >([]);
+  const [status, setStatus] = useState<{ id: number; status: string }[]>([]);
+
+  const [errors, setErrors] = useState({
+    date_contrôle: "",
+    gestionnaire_id: "",
+    epi_id: "",
+    status_id: "",
+  });
+
   // Modifiez le gestionnaire d'événements pour le bouton "Ajouter un controle"
   const handleAjouterClick = () => {
     setSelectedControle(null); // On ne sélectionne pas de contrôle existant
@@ -25,6 +40,26 @@ const ListesControle = () => {
 
   // Ajoutez une fonction pour ajouter un nouveau contrôle
   const handleAjouter = async () => {
+    let newErrors = {
+      date_contrôle: newControle.date_contrôle
+        ? ""
+        : "La date de contrôle est obligatoire.",
+      gestionnaire_id: newControle.gestionnaire_id
+        ? ""
+        : "Veuillez sélectionner un gestionnaire.",
+      epi_id: newControle.epi_id ? "" : "Veuillez sélectionner un EPI.",
+      status_id: newControle.status_id
+        ? ""
+        : "Veuillez sélectionner un statut.",
+    };
+
+    setErrors(newErrors);
+
+    // Vérifier s'il y a des erreurs avant d'envoyer la requête
+    if (Object.values(newErrors).some((error) => error !== "")) {
+      return;
+    }
+
     try {
       const response = await fetch("http://localhost:5500/episChecks", {
         method: "POST",
@@ -68,24 +103,55 @@ const ListesControle = () => {
 
   // Modifiez la fonction handleInputChange pour gérer à la fois l'édition et l'ajout
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
 
     if (selectedControle) {
       // Mode édition
-      setSelectedControle({
-        ...selectedControle,
+      setSelectedControle((prev) => ({
+        ...prev!,
         [name]: value,
-      });
+      }));
     } else {
       // Mode ajout
-      setNewControle({
-        ...newControle,
+      setNewControle((prev) => ({
+        ...prev,
         [name]: value,
-      });
+      }));
     }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Charger les gestionnaires (utilisateurs)
+        const gestionnairesResponse = await fetch(
+          "http://localhost:5500/users"
+        );
+        const gestionnairesData = await gestionnairesResponse.json();
+        setGestionnaires(gestionnairesData);
+
+        // Charger les EPI
+        const episResponse = await fetch("http://localhost:5500/epis");
+        const episData = await episResponse.json();
+        setEpis(episData);
+
+        // Charger les statuts
+        const statusesResponse = await fetch(
+          "http://localhost:5500/checkStatus"
+        );
+        const statusesData = await statusesResponse.json();
+        setStatus(statusesData);
+      } catch (error) {
+        console.error("Erreur lors du chargement des données :", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const fetchEpiChecks = async () => {
@@ -168,6 +234,7 @@ const ListesControle = () => {
       );
 
       setIsModalOpen(false);
+      window.location.reload();
     } catch (error) {
       console.error("Erreur de mise à jour :", error);
       setError(
@@ -273,19 +340,26 @@ const ListesControle = () => {
                     className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
                     onClick={() => handleModifier(controle)}
                   >
-                    {controle.gestionnaire_id || "N/A"}
+                    {
+                      gestionnaires.find(
+                        (g) => g.id === controle.gestionnaire_id
+                      )?.nom
+                    }
                   </td>
                   <td
                     className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
                     onClick={() => handleModifier(controle)}
                   >
-                    {controle.epi_id || "N/A"}
+                    {
+                      epis.find((e) => e.id === controle.epi_id)
+                        ?.identifiant_personnalise
+                    }
                   </td>
                   <td
                     className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
                     onClick={() => handleModifier(controle)}
                   >
-                    {controle.status_id || "N/A"}
+                    {status.find((s) => s.id === controle.status_id)?.status}
                   </td>
                   <td
                     className="px-6 py-4 text-sm text-gray-700"
@@ -296,14 +370,14 @@ const ListesControle = () => {
                   <td className="flex px-6 py-4 whitespace-nowrap text-sm space-x-2">
                     <button
                       onClick={() => handleModifier(controle)}
-                      className="text-blue-600 hover:bg-blue-100 p-2 rounded transition-colors"
+                      className="text-blue-600 hover:bg-blue-100 p-2 rounded transition transform hover:scale-125"
                     >
                       ✏️
                     </button>
                     <div className="border-r-2 " />
                     <button
                       onClick={() => handleSupprimer(controle.id)}
-                      className="text-red-600 hover:bg-red-100 p-2 rounded transition-colors"
+                      className="text-red-600 hover:bg-red-100 p-2 rounded transition transform hover:scale-125"
                     >
                       🗑️
                     </button>
@@ -348,10 +422,9 @@ const ListesControle = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Gestionnaire ID
+                  Gestionnaire
                 </label>
-                <input
-                  type="number"
+                <select
                   name="gestionnaire_id"
                   value={
                     selectedControle
@@ -360,14 +433,26 @@ const ListesControle = () => {
                   }
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
+                  required
+                >
+                  <option value="">Sélectionner un gestionnaire</option>
+                  {gestionnaires.map((gestionnaire) => (
+                    <option key={gestionnaire.id} value={gestionnaire.id}>
+                      {gestionnaire.nom}
+                    </option>
+                  ))}
+                </select>
+                {errors.gestionnaire_id && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.gestionnaire_id}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  EPI ID
+                  EPI
                 </label>
-                <input
-                  type="number"
+                <select
                   name="epi_id"
                   value={
                     selectedControle
@@ -377,23 +462,47 @@ const ListesControle = () => {
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
                   required
-                />
+                >
+                  <option value="">Sélectionner un EPI</option>
+                  {epis.map((epi) => (
+                    <option key={epi.id} value={epi.id}>
+                      {epi.identifiant_personnalise}
+                    </option>
+                  ))}
+                </select>
+                {errors.epi_id && (
+                  <p className="text-red-500 text-xs mt-1">{errors.epi_id}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Status ID
                 </label>
-                <input
-                  type="number"
-                  name="status_id"
-                  value={
-                    selectedControle
-                      ? selectedControle.status_id || ""
-                      : newControle.status_id || ""
-                  }
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
+                <div>
+                  <select
+                    name="status_id"
+                    value={
+                      selectedControle
+                        ? selectedControle.status_id || ""
+                        : newControle.status_id || ""
+                    }
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                    required
+                  >
+                    <option value="">Sélectionner un statut</option>
+                    {status.map((status) => (
+                      <option key={status.id} value={status.id}>
+                        {status.status}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.status_id && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.status_id}
+                    </p>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -409,6 +518,7 @@ const ListesControle = () => {
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
                   rows={3}
+                  required
                 />
               </div>
               <div className="flex justify-end space-x-2">
