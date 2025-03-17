@@ -9,6 +9,83 @@ const ListesControle = () => {
     null
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newControle, setNewControle] = useState({
+    date_contrôle: new Date().toISOString().split("T")[0],
+    gestionnaire_id: null,
+    epi_id: null,
+    status_id: null,
+    remarques: null,
+  });
+
+  // Modifiez le gestionnaire d'événements pour le bouton "Ajouter un controle"
+  const handleAjouterClick = () => {
+    setSelectedControle(null); // On ne sélectionne pas de contrôle existant
+    setIsModalOpen(true);
+  };
+
+  // Ajoutez une fonction pour ajouter un nouveau contrôle
+  const handleAjouter = async () => {
+    try {
+      const response = await fetch("http://localhost:5500/episChecks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date_contrôle: newControle.date_contrôle,
+          gestionnaire_id: newControle.gestionnaire_id || null,
+          epi_id: newControle.epi_id || null, // This is being set to null if not provided
+          status_id: newControle.status_id || null,
+          remarques: newControle.remarques || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Erreur lors de l'ajout");
+      }
+
+      const result = await response.json();
+
+      // Actualiser la liste des contrôles
+      const updatedResponse = await fetch("http://localhost:5500/episChecks");
+      const updatedData = await updatedResponse.json();
+      const sortedChecks = updatedData.sort(
+        (a: EpiCheck, b: EpiCheck) => a.id - b.id
+      );
+      setControles(sortedChecks);
+
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Erreur de création :", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Impossible de créer le contrôle"
+      );
+    }
+  };
+
+  // Modifiez la fonction handleInputChange pour gérer à la fois l'édition et l'ajout
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+
+    if (selectedControle) {
+      // Mode édition
+      setSelectedControle({
+        ...selectedControle,
+        [name]: value,
+      });
+    } else {
+      // Mode ajout
+      setNewControle({
+        ...newControle,
+        [name]: value,
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchEpiChecks = async () => {
@@ -121,17 +198,6 @@ const ListesControle = () => {
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    if (selectedControle) {
-      setSelectedControle({
-        ...selectedControle,
-        [e.target.name]: e.target.value,
-      });
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="p-6 text-center text-blue-500">
@@ -149,7 +215,7 @@ const ListesControle = () => {
       <h1 className="text-2xl font-semibold mb-4">Liste des controles</h1>
 
       <button
-        onClick={() => setIsModalOpen(true)}
+        onClick={handleAjouterClick}
         className="mb-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
       >
         Ajouter un controle
@@ -188,26 +254,43 @@ const ListesControle = () => {
                 <tr
                   key={controle.id}
                   className="hover:bg-gray-50 transition-colors"
-                  onClick={() => handleModifier(controle)}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+                    onClick={() => handleModifier(controle)}
+                  >
                     {controle.id}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+                    onClick={() => handleModifier(controle)}
+                  >
                     {controle.date_contrôle
                       ? new Date(controle.date_contrôle).toLocaleDateString()
                       : "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+                    onClick={() => handleModifier(controle)}
+                  >
                     {controle.gestionnaire_id || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+                    onClick={() => handleModifier(controle)}
+                  >
                     {controle.epi_id || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+                    onClick={() => handleModifier(controle)}
+                  >
                     {controle.status_id || "N/A"}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
+                  <td
+                    className="px-6 py-4 text-sm text-gray-700"
+                    onClick={() => handleModifier(controle)}
+                  >
                     {controle.remarques || "N/A"}
                   </td>
                   <td className="flex px-6 py-4 whitespace-nowrap text-sm space-x-2">
@@ -232,11 +315,15 @@ const ListesControle = () => {
         </table>
       </div>
 
-      {/* Modal de modification */}
-      {isModalOpen && selectedControle && (
+      {/* Modal de modification/ajout */}
+      {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-[500px]">
-            <h2 className="text-xl font-semibold mb-4">Modifier le Contrôle</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {selectedControle
+                ? "Modifier le Contrôle"
+                : "Ajouter un Contrôle"}
+            </h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -246,14 +333,17 @@ const ListesControle = () => {
                   type="date"
                   name="date_contrôle"
                   value={
-                    selectedControle.date_contrôle
-                      ? new Date(selectedControle.date_contrôle)
-                          .toISOString()
-                          .split("T")[0]
-                      : ""
+                    selectedControle
+                      ? selectedControle.date_contrôle
+                        ? new Date(selectedControle.date_contrôle)
+                            .toISOString()
+                            .split("T")[0]
+                        : ""
+                      : newControle.date_contrôle
                   }
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  required
                 />
               </div>
               <div>
@@ -263,7 +353,44 @@ const ListesControle = () => {
                 <input
                   type="number"
                   name="gestionnaire_id"
-                  value={selectedControle.gestionnaire_id}
+                  value={
+                    selectedControle
+                      ? selectedControle.gestionnaire_id || ""
+                      : newControle.gestionnaire_id || ""
+                  }
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  EPI ID
+                </label>
+                <input
+                  type="number"
+                  name="epi_id"
+                  value={
+                    selectedControle
+                      ? selectedControle.epi_id || ""
+                      : newControle.epi_id || ""
+                  }
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Status ID
+                </label>
+                <input
+                  type="number"
+                  name="status_id"
+                  value={
+                    selectedControle
+                      ? selectedControle.status_id || ""
+                      : newControle.status_id || ""
+                  }
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
                 />
@@ -274,7 +401,11 @@ const ListesControle = () => {
                 </label>
                 <textarea
                   name="remarques"
-                  value={selectedControle.remarques || ""}
+                  value={
+                    selectedControle
+                      ? selectedControle.remarques || ""
+                      : newControle.remarques || ""
+                  }
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
                   rows={3}
@@ -288,10 +419,10 @@ const ListesControle = () => {
                   Annuler
                 </button>
                 <button
-                  onClick={handleSauvegarder}
+                  onClick={selectedControle ? handleSauvegarder : handleAjouter}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                 >
-                  Sauvegarder
+                  {selectedControle ? "Sauvegarder" : "Ajouter"}
                 </button>
               </div>
             </div>
