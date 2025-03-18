@@ -100,8 +100,6 @@ router.put(
           .json("ID et type_id sont requis pour la mise à jour.");
       }
 
-      console.log("EPI reçu pour mise à jour :", updatedEpi);
-
       const result = await updateEpi(updatedEpi);
       response.status(200).json(result);
     } catch (error) {

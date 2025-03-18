@@ -59,8 +59,6 @@ export const epiCheckModel = {
         epiCheck.remarques,
       ];
 
-      console.log("Requête SQL exécutée :", query, "avec valeurs :", values);
-
       const result = await connection.query(query, values);
 
       return { insertId: result.insertId };
@@ -101,12 +99,7 @@ export const epiCheckModel = {
         epiCheck.id,
       ];
 
-      console.log("Requête SQL :", query);
-      console.log("Valeurs :", values);
-
       const result = await connection.query(query, values);
-
-      console.log("Résultat de la mise à jour :", result);
 
       return { affectedRows: result.affectedRows || 0 };
     } catch (error) {
@@ -123,11 +116,9 @@ export const epiCheckModel = {
   delete: async (id: number): Promise<{ affectedRows: number }> => {
     let connection;
     try {
-      console.log("Requête SQL pour supprimer :", id);
       connection = await pool.getConnection();
 
       const query = `DELETE FROM epiCheck WHERE id = ?`;
-      console.log("Requête SQL exécutée :", query, "avec id :", id);
 
       const result = await connection.query(query, [id]);
 

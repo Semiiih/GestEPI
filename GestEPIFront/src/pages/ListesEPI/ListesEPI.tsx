@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Epi, EpiType } from "../../../../Types";
 import { Plus, Save, Shield, X } from "lucide-react";
+import { DataTable } from "../../components/atoms/DataTable/DataTable";
 
 export default function ListesEPI() {
   const [epis, setEpis] = useState<Epi[]>([]);
@@ -142,7 +143,6 @@ export default function ListesEPI() {
       setEditingEpi(null);
     } catch (error) {
       console.error("Erreur lors de la modification :", error);
-      alert(`Erreur lors de la modification : ${error}`);
     }
   };
 
@@ -166,11 +166,49 @@ export default function ListesEPI() {
       if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
 
       setEpis((prev) => prev.filter((epi) => epi.id !== id));
-      console.log(`EPI avec l'ID ${id} supprimé`);
     } catch (error) {
       console.error("Erreur lors de la suppression :", error);
     }
   };
+
+  const renderTableCell = (epi: Epi) => (
+    <>
+      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+        {epi.id}
+      </td>
+      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+        {epi.identifiant_personnalise}
+      </td>
+      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+        {epi.marque}
+      </td>
+      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+        {epi.modèle}
+      </td>
+      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+        {epi.numéro_série}
+      </td>
+      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+        {epi.taille || "N/A"}
+      </td>
+      {/* <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">{epi.couleur || "N/A"}</td> */}
+      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+        {epiTypes.find((type) => type.id === epi.type_id)?.type || "Inconnu"}
+      </td>
+      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+        {formatDateToMySQL(new Date(epi.date_achat))}
+      </td>
+      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+        {formatDateToMySQL(new Date(epi.date_fabrication))}
+      </td>
+      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+        {formatDateToMySQL(new Date(epi.date_mise_service))}
+      </td>
+      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+        {epi.périodicité_contrôle} jours
+      </td>
+    </>
+  );
 
   return (
     <div>
@@ -183,6 +221,29 @@ export default function ListesEPI() {
         <Shield size={20} />
         Ajouter un EPI
       </button>
+
+      <DataTable
+        headers={[
+          "ID",
+          "Identifiant",
+          "Marque",
+          "Modèle",
+          "Numéro de Série",
+          "Taille",
+          // "Couleur",
+          "Type",
+          "Date Achat",
+          "Date Fabrication",
+          "Date Mise Service",
+          "Périodicité",
+          "Actions",
+        ]}
+        data={epis}
+        onModify={handleStartEdit}
+        onDelete={handleDeleteEpi}
+        renderCell={renderTableCell}
+        colSpan={13}
+      />
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -277,7 +338,7 @@ export default function ListesEPI() {
                   />
                 </div>
 
-                <div className="col-span-1">
+                {/* <div className="col-span-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Couleur
                   </label>
@@ -288,7 +349,7 @@ export default function ListesEPI() {
                     onChange={handleInputChange}
                     className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
                   />
-                </div>
+                </div> */}
 
                 <div className="col-span-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -406,158 +467,6 @@ export default function ListesEPI() {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {loading ? (
-        <p>Chargement...</p>
-      ) : (
-        <div className="overflow-x-auto shadow-md rounded-lg">
-          <table className="w-full text-sm text-left text-gray-900">
-            <thead className="text-xs text-blue-600 uppercase bg-blue-50">
-              <tr>
-                <th scope="col" className="px-4 py-6">
-                  ID
-                </th>
-                <th scope="col" className="px-4 py-6">
-                  Identifiant
-                </th>
-                <th scope="col" className="px-4 py-6">
-                  Marque
-                </th>
-                <th scope="col" className="px-4 py-6">
-                  Modèle
-                </th>
-                <th scope="col" className="px-4 py-6">
-                  Numéro de Série
-                </th>
-                <th scope="col" className="px-4 py-6">
-                  Taille
-                </th>
-                <th scope="col" className="px-4 py-6">
-                  Couleur
-                </th>
-                <th scope="col" className="px-4 py-6">
-                  Types
-                </th>
-                <th scope="col" className="px-4 py-6">
-                  Date d'Achat
-                </th>
-                <th scope="col" className="px-4 py-6">
-                  Date de Fabrication
-                </th>
-                <th scope="col" className="px-4 py-6">
-                  Date de Service
-                </th>
-                <th scope="col" className="px-4 py-6">
-                  Périodicité
-                </th>
-                <th scope="col" className="px-4 py-6 text-center">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {epis.map((epi) => (
-                <tr
-                  key={epi.id}
-                  className="bg-white border-b hover:bg-gray-50 transition duration-200 ease-in-out"
-                >
-                  <td
-                    className="px-4 py-6 font-medium text-gray-900"
-                    onClick={() => handleStartEdit(epi)}
-                  >
-                    {epi.id}
-                  </td>
-                  <td
-                    className="px-4 py-6"
-                    onClick={() => handleStartEdit(epi)}
-                  >
-                    {epi.identifiant_personnalise}
-                  </td>
-                  <td
-                    className="px-4 py-6"
-                    onClick={() => handleStartEdit(epi)}
-                  >
-                    {epi.marque}
-                  </td>
-                  <td
-                    className="px-4 py-6"
-                    onClick={() => handleStartEdit(epi)}
-                  >
-                    {epi.modèle}
-                  </td>
-                  <td
-                    className="px-4 py-6"
-                    onClick={() => handleStartEdit(epi)}
-                  >
-                    {epi.numéro_série}
-                  </td>
-                  <td
-                    className="px-4 py-6"
-                    onClick={() => handleStartEdit(epi)}
-                  >
-                    {epi.taille || "N/A"}
-                  </td>
-                  <td
-                    className="px-4 py-6"
-                    onClick={() => handleStartEdit(epi)}
-                  >
-                    {epi.couleur || "N/A"}
-                  </td>
-                  <td
-                    className="px-4 py-6"
-                    onClick={() => handleStartEdit(epi)}
-                  >
-                    {epiTypes.find((type) => type.id === epi.type_id)?.type}
-                  </td>
-                  <td
-                    className="px-4 py-6"
-                    onClick={() => handleStartEdit(epi)}
-                  >
-                    {new Date(epi.date_achat).toISOString().split("T")[0]}
-                  </td>
-                  <td
-                    className="px-4 py-6"
-                    onClick={() => handleStartEdit(epi)}
-                  >
-                    {new Date(epi.date_fabrication).toISOString().split("T")[0]}
-                  </td>
-                  <td className="px-4 py-6 onClick={() => handleStartEdit(epi)}">
-                    {
-                      new Date(epi.date_mise_service)
-                        .toISOString()
-                        .split("T")[0]
-                    }
-                  </td>
-                  <td
-                    className="px-4 py-6"
-                    onClick={() => handleStartEdit(epi)}
-                  >
-                    {epi.périodicité_contrôle} jours
-                  </td>
-
-                  <td className="flex px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                    <button
-                      onClick={() => handleStartEdit(epi)}
-                      className="text-blue-600 hover:bg-blue-100 p-2 rounded transition transform hover:scale-125"
-                      title="Modifier"
-                    >
-                      ✏️
-                    </button>
-                    <div className="border-r-2 " />
-                    <button
-                      onClick={() => handleDeleteEpi(epi.id)}
-                      className="text-red-600 hover:bg-red-100 p-2 rounded transition transform hover:scale-125"
-                      title="Supprimer"
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       )}
     </div>

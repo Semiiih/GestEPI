@@ -45,13 +45,18 @@ export default function Layout({ children }: LayoutProps) {
         ).length;
 
         setStats({
+          // affiche le nb total d epi
           totalEPI: episData.length,
+
+          //affiche les stats des controles a faire pour ajd
           controlesToday,
 
+          // affiche le nb de controle en 'réparation nécessaire'
           pendingControls: controlesData.filter(
             (controle: any) => controle.status_id === 2
           ).length,
 
+          // affiche le nb de controle expirant sous 30jours
           expiringControls: controlesData.filter((controle: any) => {
             const date = new Date(controle.date_contrôle);
             const thirtyDaysFromNow = new Date();
@@ -153,9 +158,9 @@ export default function Layout({ children }: LayoutProps) {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {/* Contenu principal */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
-        {/* Top Bar */}
+        {/* Barre 'tableau de bord' */}
         <header className="bg-white shadow-sm">
           <div className="flex items-center justify-between p-4">
             <button
@@ -173,7 +178,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </header>
 
-        {/* Stats */}
+        {/* Bloc des stats  */}
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             {/* Total EPIs */}
@@ -206,7 +211,7 @@ export default function Layout({ children }: LayoutProps) {
               </div>
             </div>
 
-            {/* Contrôles en attente */}
+            {/* Contrôles en réparation nécessaire */}
             <div className="bg-white rounded-xl shadow-sm shadow-indigo-300 p-6 border border-gray-100 transition transform hover:scale-105">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-yellow-50 rounded-lg">
@@ -221,7 +226,7 @@ export default function Layout({ children }: LayoutProps) {
               </div>
             </div>
 
-            {/* Contrôles à expiration */}
+            {/* Controles à expiration */}
             <div className="bg-white rounded-xl shadow-sm shadow-indigo-300 p-6 border border-gray-100 transition transform hover:scale-105">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-red-50 rounded-lg">

@@ -84,8 +84,6 @@ export const epiModel = {
         epi.périodicité_contrôle,
       ];
 
-      console.log("Requête SQL exécutée :", query, "avec valeurs :", values);
-
       const result = await connection.query(query, values);
       return { insertId: result.insertId };
     } catch (error) {
@@ -122,8 +120,6 @@ export const epiModel = {
         epi.id,
       ];
 
-      console.log("Requête SQL exécutée :", query, "avec valeurs :", values);
-
       const result = await connection.query(query, values);
       return { affectedRows: result.affectedRows };
     } catch (error) {
@@ -139,8 +135,6 @@ export const epiModel = {
     try {
       connection = await pool.getConnection();
       const query = "DELETE FROM epi WHERE id = ?";
-      console.log("Requête SQL exécutée :", query, "avec ID :", id);
-
       const result = await connection.query(query, [id]);
       return { affectedRows: result.affectedRows };
     } catch (error) {

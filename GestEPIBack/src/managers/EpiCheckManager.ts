@@ -66,8 +66,6 @@ export const updateEpiCheck = async (epiCheck: EpiCheck) => {
       throw new Error("L'ID est obligatoire pour la mise à jour.");
     }
 
-    console.log("Données reçues pour mise à jour :", epiCheck);
-
     const result = await epiCheckModel.update(epiCheck);
 
     if (result.affectedRows === 0) {
@@ -92,15 +90,12 @@ export const updateEpiCheck = async (epiCheck: EpiCheck) => {
 
 export const deleteEpiCheck = async (id: number) => {
   try {
-    console.log("Tentative de suppression pour l'ID :", id);
-
     const result = await epiCheckModel.delete(id);
 
     if (result.affectedRows === 0) {
       throw new Error(`Aucun contrôle d'EPI supprimé. ID ${id} non trouvé.`);
     }
 
-    console.log(`Contrôle d'EPI avec ID ${id} supprimé.`);
     return {
       message: `Contrôle d'EPI avec ID ${id} supprimé.`,
     };

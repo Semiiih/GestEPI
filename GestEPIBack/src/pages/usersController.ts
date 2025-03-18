@@ -99,7 +99,6 @@ router.delete(
   ) => {
     try {
       const { id } = request.params;
-      console.log(`Tentative de suppression de l'utilisateur avec ID : ${id}`);
       const result = await deleteUser(Number(id));
       response.status(200).json(result);
     } catch (error) {

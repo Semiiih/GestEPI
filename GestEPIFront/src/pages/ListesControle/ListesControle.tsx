@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { EpiCheck } from "../../../../Types";
-import { AlertCircle, Plus, Save, X } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { Modal } from "../../components/atoms/Modal/index";
+import { DataTable } from "../../components/atoms/DataTable/index";
 
 const ListesControle = () => {
   const [controles, setControles] = useState<EpiCheck[]>([]);
@@ -70,22 +72,23 @@ const ListesControle = () => {
         body: JSON.stringify({
           date_contrôle: newControle.date_contrôle,
           gestionnaire_id: newControle.gestionnaire_id || null,
-          epi_id: newControle.epi_id || null, // This is being set to null if not provided
+          epi_id: newControle.epi_id || null,
           status_id: newControle.status_id || null,
           remarques: newControle.remarques || null,
         }),
       });
 
+      // Vérification si la requête a échoué
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText || "Erreur lors de l'ajout");
       }
 
-      const result = await response.json();
-
       // Actualiser la liste des contrôles
       const updatedResponse = await fetch("http://localhost:5500/episChecks");
       const updatedData = await updatedResponse.json();
+
+      // Trier les contrôles par ID
       const sortedChecks = updatedData.sort(
         (a: EpiCheck, b: EpiCheck) => a.id - b.id
       );
@@ -94,15 +97,10 @@ const ListesControle = () => {
       setIsModalOpen(false);
     } catch (error) {
       console.error("Erreur de création :", error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Impossible de créer le contrôle"
-      );
     }
   };
 
-  // Modifiez la fonction handleInputChange pour gérer à la fois l'édition et l'ajout
+  // gérer à la fois la modification et l'ajout
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -128,19 +126,16 @@ const ListesControle = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Charger les gestionnaires (utilisateurs)
         const gestionnairesResponse = await fetch(
           "http://localhost:5500/users"
         );
         const gestionnairesData = await gestionnairesResponse.json();
         setGestionnaires(gestionnairesData);
 
-        // Charger les EPI
         const episResponse = await fetch("http://localhost:5500/epis");
         const episData = await episResponse.json();
         setEpis(episData);
 
-        // Charger les statuts
         const statusesResponse = await fetch(
           "http://localhost:5500/checkStatus"
         );
@@ -159,15 +154,7 @@ const ListesControle = () => {
       try {
         const response = await fetch("http://localhost:5500/episChecks");
 
-        if (!response.ok) {
-          throw new Error(`Erreur HTTP ! statut : ${response.status}`);
-        }
-
         const data = await response.json();
-
-        if (!Array.isArray(data)) {
-          throw new Error("Format de données incorrect");
-        }
 
         const sortedChecks = data.sort(
           (a: EpiCheck, b: EpiCheck) => a.id - b.id
@@ -177,11 +164,6 @@ const ListesControle = () => {
         setIsLoading(false);
       } catch (error) {
         console.error("Erreur lors de la récupération des EpiChecks :", error);
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Une erreur inconnue s'est produite"
-        );
         setIsLoading(false);
       }
     };
@@ -190,6 +172,7 @@ const ListesControle = () => {
   }, []);
 
   const handleModifier = (controle: EpiCheck) => {
+    // Met à jour l état selectedControle avec les données du contrôle sélectionné
     setSelectedControle({ ...controle });
     setIsModalOpen(true);
   };
@@ -220,14 +203,7 @@ const ListesControle = () => {
         }
       );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Erreur lors de la mise à jour");
-      }
-
-      const result = await response.json();
-      console.log("Résultat de la mise à jour :", result);
-
+      // Met à jour la liste des controles avec les nouvelles donnees
       setControles(
         controles.map((c) =>
           c.id === selectedControle.id ? selectedControle : c
@@ -238,15 +214,11 @@ const ListesControle = () => {
       window.location.reload();
     } catch (error) {
       console.error("Erreur de mise à jour :", error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Impossible de mettre à jour le contrôle"
-      );
     }
   };
 
   const handleSupprimer = async (id: number) => {
+    //demande de confiramtion
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce contrôle ?"))
       return;
 
@@ -262,7 +234,6 @@ const ListesControle = () => {
       setControles(controles.filter((c) => c.id !== id));
     } catch (error) {
       console.error("Erreur de suppression :", error);
-      setError("Impossible de supprimer le contrôle");
     }
   };
 
@@ -278,6 +249,54 @@ const ListesControle = () => {
     return <div className="p-6 text-red-500">Erreur : {error}</div>;
   }
 
+  // pour remplir les colonnes du tableau Datatable
+  const renderTableCell = (controle: EpiCheck) => {
+    return (
+      <>
+        <td
+          className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+          onClick={() => handleModifier(controle)}
+        >
+          {controle.id}
+        </td>
+        <td
+          className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+          onClick={() => handleModifier(controle)}
+        >
+          {controle.date_contrôle
+            ? new Date(controle.date_contrôle).toLocaleDateString()
+            : "N/A"}
+        </td>
+        <td
+          className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+          onClick={() => handleModifier(controle)}
+        >
+          {gestionnaires.find((g) => g.id === controle.gestionnaire_id)?.nom ||
+            "Inconnu"}
+        </td>
+        <td
+          className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+          onClick={() => handleModifier(controle)}
+        >
+          {epis.find((e) => e.id === controle.epi_id)
+            ?.identifiant_personnalise || "Inconnu"}
+        </td>
+        <td
+          className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+          onClick={() => handleModifier(controle)}
+        >
+          {status.find((s) => s.id === controle.status_id)?.status || "Inconnu"}
+        </td>
+        <td
+          className="px-6 py-4 text-sm text-gray-700"
+          onClick={() => handleModifier(controle)}
+        >
+          {controle.remarques || "N/A"}
+        </td>
+      </>
+    );
+  };
+
   return (
     <div className="">
       <h1 className="text-2xl font-semibold mb-4">Liste des controles</h1>
@@ -290,295 +309,37 @@ const ListesControle = () => {
         Ajouter un controle
       </button>
 
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden p-6 space-y-6">
-        <table className="w-full">
-          <thead className="bg-blue-50">
-            <tr>
-              {[
-                "ID",
-                "Date Contrôle",
-                "Gestionnaire ID",
-                "EPI ID",
-                "Statut ID",
-                "Remarques",
-                "Actions",
-              ].map((header) => (
-                <th
-                  key={header}
-                  className="px-6 py-3 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider"
-                >
-                  {header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {controles.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="text-center py-4 text-gray-500">
-                  Aucun contrôle trouvé
-                </td>
-              </tr>
-            ) : (
-              controles.map((controle) => (
-                <tr
-                  key={controle.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                    onClick={() => handleModifier(controle)}
-                  >
-                    {controle.id}
-                  </td>
-                  <td
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                    onClick={() => handleModifier(controle)}
-                  >
-                    {controle.date_contrôle
-                      ? new Date(controle.date_contrôle).toLocaleDateString()
-                      : "N/A"}
-                  </td>
-                  <td
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                    onClick={() => handleModifier(controle)}
-                  >
-                    {
-                      gestionnaires.find(
-                        (g) => g.id === controle.gestionnaire_id
-                      )?.nom
-                    }
-                  </td>
-                  <td
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                    onClick={() => handleModifier(controle)}
-                  >
-                    {
-                      epis.find((e) => e.id === controle.epi_id)
-                        ?.identifiant_personnalise
-                    }
-                  </td>
-                  <td
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                    onClick={() => handleModifier(controle)}
-                  >
-                    {status.find((s) => s.id === controle.status_id)?.status}
-                  </td>
-                  <td
-                    className="px-6 py-4 text-sm text-gray-700"
-                    onClick={() => handleModifier(controle)}
-                  >
-                    {controle.remarques || "N/A"}
-                  </td>
-                  <td className="flex px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                    <button
-                      onClick={() => handleModifier(controle)}
-                      className="text-blue-600 hover:bg-blue-100 p-2 rounded transition transform hover:scale-125"
-                    >
-                      ✏️
-                    </button>
-                    <div className="border-r-2 " />
-                    <button
-                      onClick={() => handleSupprimer(controle.id)}
-                      className="text-red-600 hover:bg-red-100 p-2 rounded transition transform hover:scale-125"
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        headers={[
+          "ID",
+          "Date Contrôle",
+          "Gestionnaire",
+          "EPI",
+          "Statut",
+          "Remarques",
+          "Actions",
+        ]}
+        data={controles}
+        emptyMessage="Aucun contrôle trouvé"
+        onModify={handleModifier}
+        onDelete={handleSupprimer}
+        renderCell={renderTableCell}
+        colSpan={7}
+      />
 
-      {/* Modal de modification/ajout */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-screen items-center justify-center p-4 text-center">
-            <div
-              className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm transition-opacity"
-              onClick={() => setIsModalOpen(false)}
-            />
-
-            <div className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left shadow-xl transition-all">
-              <div className="flex items-center justify-between mb-6 border-b pb-4">
-                <h3 className="text-2xl font-semibold text-gray-900">
-                  {selectedControle
-                    ? "Modifier le Contrôle"
-                    : "Nouveau Contrôle"}
-                </h3>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="rounded-full p-2 hover:bg-gray-100 transition-colors"
-                >
-                  <X size={20} className="text-gray-500" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date de Contrôle
-                  </label>
-                  <input
-                    type="date"
-                    name="date_contrôle"
-                    value={
-                      selectedControle
-                        ? selectedControle.date_contrôle
-                          ? new Date(selectedControle.date_contrôle)
-                              .toISOString()
-                              .split("T")[0]
-                          : ""
-                        : newControle.date_contrôle
-                    }
-                    onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
-                  />
-                  {errors.date_contrôle && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.date_contrôle}
-                    </p>
-                  )}
-                </div>
-
-                <div className="col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Gestionnaire
-                  </label>
-                  <select
-                    name="gestionnaire_id"
-                    value={
-                      selectedControle
-                        ? selectedControle.gestionnaire_id || ""
-                        : newControle.gestionnaire_id || ""
-                    }
-                    onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
-                  >
-                    <option value="">Sélectionner un gestionnaire</option>
-                    {gestionnaires.map((gestionnaire) => (
-                      <option key={gestionnaire.id} value={gestionnaire.id}>
-                        {gestionnaire.nom}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.gestionnaire_id && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.gestionnaire_id}
-                    </p>
-                  )}
-                </div>
-
-                <div className="col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    EPI
-                  </label>
-                  <select
-                    name="epi_id"
-                    value={
-                      selectedControle
-                        ? selectedControle.epi_id || ""
-                        : newControle.epi_id || ""
-                    }
-                    onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
-                  >
-                    <option value="">Sélectionner un EPI</option>
-                    {epis.map((epi) => (
-                      <option key={epi.id} value={epi.id}>
-                        {epi.identifiant_personnalise}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.epi_id && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.epi_id}
-                    </p>
-                  )}
-                </div>
-
-                <div className="col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Statut
-                  </label>
-                  <select
-                    name="status_id"
-                    value={
-                      selectedControle
-                        ? selectedControle.status_id || ""
-                        : newControle.status_id || ""
-                    }
-                    onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
-                  >
-                    <option value="">Sélectionner un statut</option>
-                    {status.map((status) => (
-                      <option key={status.id} value={status.id}>
-                        {status.status}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.status_id && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.status_id}
-                    </p>
-                  )}
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Remarques
-                  </label>
-                  <textarea
-                    name="remarques"
-                    value={
-                      selectedControle
-                        ? selectedControle.remarques || ""
-                        : newControle.remarques || ""
-                    }
-                    onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
-                    rows={4}
-                    placeholder="Ajoutez vos remarques ici..."
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
-                >
-                  <X size={20} />
-                  Annuler
-                </button>
-                <button
-                  onClick={selectedControle ? handleSauvegarder : handleAjouter}
-                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex items-center gap-2"
-                >
-                  {selectedControle ? (
-                    <>
-                      <Save size={20} />
-                      Sauvegarder
-                    </>
-                  ) : (
-                    <>
-                      <Plus size={20} />
-                      Ajouter
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        selectedControle={selectedControle}
+        newControle={newControle}
+        errors={errors}
+        gestionnaires={gestionnaires}
+        epis={epis}
+        status={status}
+        handleInputChange={handleInputChange}
+        handleSauvegarder={handleSauvegarder}
+        handleAjouter={handleAjouter}
+      />
     </div>
   );
 };

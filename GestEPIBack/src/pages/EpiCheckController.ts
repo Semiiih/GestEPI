@@ -94,8 +94,6 @@ router.put(
         return response.status(400).json("ID est requis pour la mise à jour.");
       }
 
-      console.log("EpiCheck reçu pour mise à jour :", updatedEpiCheck);
-
       const result = await updateEpiCheck(updatedEpiCheck);
       response.status(200).json(result);
     } catch (error) {
