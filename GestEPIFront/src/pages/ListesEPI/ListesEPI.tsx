@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Epi, EpiType } from "../../../../Types";
+import { Plus, Save, Shield, X } from "lucide-react";
 
 export default function ListesEPI() {
   const [epis, setEpis] = useState<Epi[]>([]);
@@ -27,11 +28,9 @@ export default function ListesEPI() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Charger les EPI
         const episResponse = await fetch("http://localhost:5500/epis");
         setEpis(await episResponse.json());
 
-        // Charger les types d'EPI
         const typesResponse = await fetch("http://localhost:5500/epiTypes");
         const typesData: EpiType[] = await typesResponse.json();
         setEpiTypes(typesData);
@@ -179,150 +178,232 @@ export default function ListesEPI() {
 
       <button
         onClick={() => setIsModalOpen(true)}
-        className="mb-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+        className="mb-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-6 py-3 rounded-lg hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
       >
-        Ajouter une EPI
+        <Shield size={20} />
+        Ajouter un EPI
       </button>
 
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded shadow-lg w-1/2">
-            <h2 className="text-xl font-semibold mb-4">
-              {editingEpi ? "Modifier l'EPI" : "Ajouter une nouvelle EPI"}
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                name="identifiant_personnalise"
-                placeholder="Identifiant personnalisé"
-                value={
-                  editingEpi?.identifiant_personnalise ||
-                  newEpi.identifiant_personnalise
-                }
-                onChange={handleInputChange}
-                className="border p-2 rounded"
-              />
-              <input
-                name="marque"
-                placeholder="Marque"
-                value={editingEpi?.marque || newEpi.marque}
-                onChange={handleInputChange}
-                className="border p-2 rounded"
-              />
-              <input
-                name="modèle"
-                placeholder="Modèle"
-                value={editingEpi?.modèle || newEpi.modèle}
-                onChange={handleInputChange}
-                className="border p-2 rounded"
-              />
-              <input
-                name="numéro_série"
-                placeholder="Numéro de Série"
-                value={editingEpi?.numéro_série || newEpi.numéro_série}
-                onChange={handleInputChange}
-                className="border p-2 rounded"
-              />
-              <input
-                name="taille"
-                placeholder="Taille"
-                value={editingEpi?.taille || newEpi.taille || ""}
-                onChange={handleInputChange}
-                className="border p-2 rounded"
-              />
-              <input
-                name="couleur"
-                placeholder="Couleur"
-                value={editingEpi?.couleur || newEpi.couleur || ""}
-                onChange={handleInputChange}
-                className="border p-2 rounded"
-              />
-              <div className="flex flex-col">
-                <p>Type d'EPI</p>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4 text-center">
+            <div
+              className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm transition-opacity"
+              onClick={handleCloseModal}
+            />
 
-                <select
-                  name="type_id"
-                  value={editingEpi?.type_id || newEpi.type_id || ""}
-                  onChange={handleInputChange}
-                  className="border p-2 rounded"
+            <div className="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white p-6 text-left shadow-xl transition-all">
+              <div className="flex items-center justify-between mb-6 border-b pb-4">
+                <div className="flex items-center gap-3">
+                  <Shield size={24} className="text-indigo-600" />
+                  <h3 className="text-2xl font-semibold text-gray-900">
+                    {editingEpi ? "Modifier l'EPI" : "Nouvel EPI"}
+                  </h3>
+                </div>
+                <button
+                  onClick={handleCloseModal}
+                  className="rounded-full p-2 hover:bg-gray-100 transition-colors"
                 >
-                  <option value="">Sélectionner un type d'EPI</option>
-                  {epiTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.type}
-                    </option>
-                  ))}
-                </select>
+                  <X size={20} className="text-gray-500" />
+                </button>
               </div>
-              <div className="flex flex-col">
-                <p>périodicité_contrôle</p>
-                <input
-                  name="périodicité_contrôle"
-                  type="number"
-                  placeholder="Périodicité (jours)"
-                  value={
-                    editingEpi?.périodicité_contrôle ||
-                    newEpi.périodicité_contrôle
-                  }
-                  onChange={handleInputChange}
-                  className="border p-2 rounded"
-                />
+
+              <div className="grid grid-cols-3 gap-6">
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Identifiant personnalisé
+                  </label>
+                  <input
+                    name="identifiant_personnalise"
+                    placeholder="Ex: EPI-2024-001"
+                    value={
+                      editingEpi?.identifiant_personnalise ||
+                      newEpi.identifiant_personnalise
+                    }
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Marque
+                  </label>
+                  <input
+                    name="marque"
+                    placeholder="Ex: Petzl"
+                    value={editingEpi?.marque || newEpi.marque}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Modèle
+                  </label>
+                  <input
+                    name="modèle"
+                    placeholder="Ex: Vertex"
+                    value={editingEpi?.modèle || newEpi.modèle}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Numéro de série
+                  </label>
+                  <input
+                    name="numéro_série"
+                    placeholder="Ex: SN-12345"
+                    value={editingEpi?.numéro_série || newEpi.numéro_série}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Taille
+                  </label>
+                  <input
+                    name="taille"
+                    placeholder="Ex: 12 mm"
+                    value={editingEpi?.taille || newEpi.taille || ""}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Couleur
+                  </label>
+                  <input
+                    name="couleur"
+                    placeholder="Ex: Rouge"
+                    value={editingEpi?.couleur || newEpi.couleur || ""}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Type d'EPI
+                  </label>
+                  <select
+                    name="type_id"
+                    value={editingEpi?.type_id || newEpi.type_id || ""}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  >
+                    <option value="">Sélectionner un type</option>
+                    {epiTypes.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Périodicité de contrôle (jours)
+                  </label>
+                  <input
+                    name="périodicité_contrôle"
+                    type="number"
+                    placeholder="Ex: 365"
+                    value={
+                      editingEpi?.périodicité_contrôle ||
+                      newEpi.périodicité_contrôle
+                    }
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date de fabrication
+                  </label>
+                  <input
+                    name="date_fabrication"
+                    type="date"
+                    value={formatDateToMySQL(
+                      editingEpi?.date_fabrication
+                        ? new Date(editingEpi.date_fabrication)
+                        : newEpi.date_fabrication
+                    )}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date de mise en service
+                  </label>
+                  <input
+                    name="date_mise_service"
+                    type="date"
+                    value={formatDateToMySQL(
+                      editingEpi?.date_mise_service
+                        ? new Date(editingEpi.date_mise_service)
+                        : newEpi.date_mise_service
+                    )}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date d'achat
+                  </label>
+                  <input
+                    name="date_achat"
+                    type="date"
+                    value={formatDateToMySQL(
+                      editingEpi?.date_achat
+                        ? new Date(editingEpi.date_achat)
+                        : newEpi.date_achat
+                    )}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  />
+                </div>
               </div>
-              <div className="flex flex-col">
-                <p>date_fabrication</p>
-                <input
-                  name="date_fabrication"
-                  type="date"
-                  value={formatDateToMySQL(
-                    editingEpi?.date_fabrication
-                      ? new Date(editingEpi.date_fabrication)
-                      : newEpi.date_fabrication
+
+              {/* Actions */}
+              <div className="mt-8 flex justify-end gap-3">
+                <button
+                  onClick={handleCloseModal}
+                  className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                >
+                  <X size={20} />
+                  Annuler
+                </button>
+                <button
+                  onClick={editingEpi ? handleEditEpi : handleAddEpi}
+                  className="px-6 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-700 text-white hover:from-indigo-700 hover:to-indigo-800 transition-colors flex items-center gap-2"
+                >
+                  {editingEpi ? (
+                    <>
+                      <Save size={20} />
+                      Sauvegarder
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={20} />
+                      Ajouter
+                    </>
                   )}
-                  onChange={handleInputChange}
-                  className="border p-2 rounded"
-                />
+                </button>
               </div>
-              <div className="flex flex-col">
-                <p>date_mise_service</p>
-                <input
-                  name="date_mise_service"
-                  type="date"
-                  value={formatDateToMySQL(
-                    editingEpi?.date_mise_service
-                      ? new Date(editingEpi.date_mise_service)
-                      : newEpi.date_mise_service
-                  )}
-                  onChange={handleInputChange}
-                  className="border p-2 rounded"
-                />
-              </div>
-              <div className="flex flex-col">
-                <p>date_achat</p>
-                <input
-                  name="date_achat"
-                  type="date"
-                  value={formatDateToMySQL(
-                    editingEpi?.date_achat
-                      ? new Date(editingEpi.date_achat)
-                      : newEpi.date_achat
-                  )}
-                  onChange={handleInputChange}
-                  className="border p-2 rounded"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={handleCloseModal}
-                className="bg-gray-500 text-white px-4 py-2 rounded mr-2 hover:bg-gray-600"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={editingEpi ? handleEditEpi : handleAddEpi}
-                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-              >
-                {editingEpi ? "Modifier" : "Ajouter"}
-              </button>
             </div>
           </div>
         </div>
@@ -473,21 +554,6 @@ export default function ListesEPI() {
                       🗑️
                     </button>
                   </td>
-                  {/* <td className="flex px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                    <button
-                      onClick={() => handleModifier(controle)}
-                      className="text-blue-600 hover:bg-blue-100 p-2 rounded transition-colors"
-                    >
-                      ✏️
-                    </button>
-                    <div className="border-r-2 " />
-                    <button
-                      onClick={() => handleSupprimer(controle.id)}
-                      className="text-red-600 hover:bg-red-100 p-2 rounded transition-colors"
-                    >
-                      🗑️
-                    </button>
-                  </td> */}
                 </tr>
               ))}
             </tbody>

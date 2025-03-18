@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { EpiCheck } from "../../../../Types";
+import { AlertCircle, Plus, Save, X } from "lucide-react";
 
 const ListesControle = () => {
   const [controles, setControles] = useState<EpiCheck[]>([]);
@@ -34,7 +35,7 @@ const ListesControle = () => {
 
   // Modifiez le gestionnaire d'événements pour le bouton "Ajouter un controle"
   const handleAjouterClick = () => {
-    setSelectedControle(null); // On ne sélectionne pas de contrôle existant
+    setSelectedControle(null);
     setIsModalOpen(true);
   };
 
@@ -283,10 +284,12 @@ const ListesControle = () => {
 
       <button
         onClick={handleAjouterClick}
-        className="mb-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+        className="mb-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-6 py-3 rounded-lg hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
       >
+        <AlertCircle size={20} />
         Ajouter un controle
       </button>
+
       <div className="bg-white rounded-lg shadow-lg overflow-hidden p-6 space-y-6">
         <table className="w-full">
           <thead className="bg-blue-50">
@@ -391,94 +394,118 @@ const ListesControle = () => {
 
       {/* Modal de modification/ajout */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-[500px]">
-            <h2 className="text-xl font-semibold mb-4">
-              {selectedControle
-                ? "Modifier le Contrôle"
-                : "Ajouter un Contrôle"}
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Date Contrôle
-                </label>
-                <input
-                  type="date"
-                  name="date_contrôle"
-                  value={
-                    selectedControle
-                      ? selectedControle.date_contrôle
-                        ? new Date(selectedControle.date_contrôle)
-                            .toISOString()
-                            .split("T")[0]
-                        : ""
-                      : newControle.date_contrôle
-                  }
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Gestionnaire
-                </label>
-                <select
-                  name="gestionnaire_id"
-                  value={
-                    selectedControle
-                      ? selectedControle.gestionnaire_id || ""
-                      : newControle.gestionnaire_id || ""
-                  }
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                  required
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4 text-center">
+            <div
+              className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm transition-opacity"
+              onClick={() => setIsModalOpen(false)}
+            />
+
+            <div className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left shadow-xl transition-all">
+              <div className="flex items-center justify-between mb-6 border-b pb-4">
+                <h3 className="text-2xl font-semibold text-gray-900">
+                  {selectedControle
+                    ? "Modifier le Contrôle"
+                    : "Nouveau Contrôle"}
+                </h3>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-full p-2 hover:bg-gray-100 transition-colors"
                 >
-                  <option value="">Sélectionner un gestionnaire</option>
-                  {gestionnaires.map((gestionnaire) => (
-                    <option key={gestionnaire.id} value={gestionnaire.id}>
-                      {gestionnaire.nom}
-                    </option>
-                  ))}
-                </select>
-                {errors.gestionnaire_id && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.gestionnaire_id}
-                  </p>
-                )}
+                  <X size={20} className="text-gray-500" />
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  EPI
-                </label>
-                <select
-                  name="epi_id"
-                  value={
-                    selectedControle
-                      ? selectedControle.epi_id || ""
-                      : newControle.epi_id || ""
-                  }
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                  required
-                >
-                  <option value="">Sélectionner un EPI</option>
-                  {epis.map((epi) => (
-                    <option key={epi.id} value={epi.id}>
-                      {epi.identifiant_personnalise}
-                    </option>
-                  ))}
-                </select>
-                {errors.epi_id && (
-                  <p className="text-red-500 text-xs mt-1">{errors.epi_id}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Status ID
-                </label>
-                <div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date de Contrôle
+                  </label>
+                  <input
+                    type="date"
+                    name="date_contrôle"
+                    value={
+                      selectedControle
+                        ? selectedControle.date_contrôle
+                          ? new Date(selectedControle.date_contrôle)
+                              .toISOString()
+                              .split("T")[0]
+                          : ""
+                        : newControle.date_contrôle
+                    }
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  />
+                  {errors.date_contrôle && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle size={16} />
+                      {errors.date_contrôle}
+                    </p>
+                  )}
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Gestionnaire
+                  </label>
+                  <select
+                    name="gestionnaire_id"
+                    value={
+                      selectedControle
+                        ? selectedControle.gestionnaire_id || ""
+                        : newControle.gestionnaire_id || ""
+                    }
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  >
+                    <option value="">Sélectionner un gestionnaire</option>
+                    {gestionnaires.map((gestionnaire) => (
+                      <option key={gestionnaire.id} value={gestionnaire.id}>
+                        {gestionnaire.nom}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.gestionnaire_id && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle size={16} />
+                      {errors.gestionnaire_id}
+                    </p>
+                  )}
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    EPI
+                  </label>
+                  <select
+                    name="epi_id"
+                    value={
+                      selectedControle
+                        ? selectedControle.epi_id || ""
+                        : newControle.epi_id || ""
+                    }
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                  >
+                    <option value="">Sélectionner un EPI</option>
+                    {epis.map((epi) => (
+                      <option key={epi.id} value={epi.id}>
+                        {epi.identifiant_personnalise}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.epi_id && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle size={16} />
+                      {errors.epi_id}
+                    </p>
+                  )}
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Statut
+                  </label>
                   <select
                     name="status_id"
                     value={
@@ -487,8 +514,7 @@ const ListesControle = () => {
                         : newControle.status_id || ""
                     }
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                    required
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
                   >
                     <option value="">Sélectionner un statut</option>
                     {status.map((status) => (
@@ -498,41 +524,55 @@ const ListesControle = () => {
                     ))}
                   </select>
                   {errors.status_id && (
-                    <p className="text-red-500 text-xs mt-1">
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle size={16} />
                       {errors.status_id}
                     </p>
                   )}
                 </div>
+
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Remarques
+                  </label>
+                  <textarea
+                    name="remarques"
+                    value={
+                      selectedControle
+                        ? selectedControle.remarques || ""
+                        : newControle.remarques || ""
+                    }
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors"
+                    rows={4}
+                    placeholder="Ajoutez vos remarques ici..."
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Remarques
-                </label>
-                <textarea
-                  name="remarques"
-                  value={
-                    selectedControle
-                      ? selectedControle.remarques || ""
-                      : newControle.remarques || ""
-                  }
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                  rows={3}
-                  required
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
+
+              <div className="mt-6 flex justify-end gap-3">
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
                 >
+                  <X size={20} />
                   Annuler
                 </button>
                 <button
                   onClick={selectedControle ? handleSauvegarder : handleAjouter}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex items-center gap-2"
                 >
-                  {selectedControle ? "Sauvegarder" : "Ajouter"}
+                  {selectedControle ? (
+                    <>
+                      <Save size={20} />
+                      Sauvegarder
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={20} />
+                      Ajouter
+                    </>
+                  )}
                 </button>
               </div>
             </div>
