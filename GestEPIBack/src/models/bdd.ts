@@ -9,6 +9,7 @@ export const pool = mariadb.createPool({
   password: "root",
   database: "GestEPI",
   bigIntAsNumber: true,
+  dateStrings: true,
   connectionLimit: 5,
 });
 
